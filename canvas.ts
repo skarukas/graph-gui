@@ -1,8 +1,7 @@
-let canvas = document.querySelector("canvas"),
+let canvas = document.getElementById("graph-gui") as HTMLCanvasElement,
     ctx: CanvasRenderingContext2D = canvas.getContext("2d");
-    //key = require("./keymaster");
 
-//get DPI
+/* //get DPI
 let dpi = window.devicePixelRatio;
 
 function fix_dpi() {
@@ -15,7 +14,7 @@ function fix_dpi() {
     //scale the canvas
     canvas.setAttribute('height', (style_height * dpi)+"");
     canvas.setAttribute('width', (style_width * dpi)+"");
-}
+} */
 
 
 class Color {
@@ -47,23 +46,23 @@ class Color {
 }
 
 class Circle {
-    static stdColor = new Color(255);
-    static hoveredColor = new Color(230);
-    static selectedColor = new Color(160);
-    color = Circle.stdColor;
+    color = graph.vertex.stdColor; // should it really store a color?
     hovered = false;
     point: Point;
+    context: CanvasRenderingContext2D;
 
     constructor(x = 0, y = 0, public radius = 20) {
         this.point = new Point(x, y);
     }
-    draw(color: Color = Circle.stdColor) {
+    draw(color: Color = graph.vertex.stdColor) {
         this.color = color;
         let str = color.toString();
         this.context.beginPath();
         this.context.arc(this.point.x, this.point.y, this.radius, 0, 2 * Math.PI);
         this.context.fillStyle = str;
         this.context.fill();
+        this.context.strokeStyle = graph.vertex.outlineColor.toString();
+        this.context.lineWidth = graph.vertex.outlineWidth;
         this.context.stroke();
     }
     lineTo(other: Circle) {
@@ -71,7 +70,7 @@ class Circle {
             d = this.point.dist(other.point),
             c = Math.min(d/3, 200);
 
-        this.context.lineWidth = 2;
+        this.context.lineWidth = graph.edge.lineWidth;
         this.context.strokeStyle = (new Color(c)).toString();
         drawLine(this.context, this.point, other.point);
         this.context.strokeStyle = temp;
@@ -82,7 +81,6 @@ class Circle {
     contains(p: Point) {
         return p.dist(this.point) < this.radius;
     }
-    context: CanvasRenderingContext2D;
 }
 
 class Pair {
@@ -96,20 +94,16 @@ class Point extends Pair {
 }
 
 class CircleWrapper extends Circle {
-    data: Circle = this;
-    static textColor = new Color(128, 0, 0);
-    static backgroundColor = new Color(256, 256, 256, 0.8);
+    data: Object = new DemoObj(13, 34);
     drawText() {
-        let fontSize = 12,
-            fontFace = "Arial",
-            x = this.point.x,
+        let x = this.point.x,
             y = this.point.y - (this.radius + 4);
 
         this.context.textAlign = "center";
-        this.context.font = fontSize + "px " + fontFace;
+        this.context.font = graph.vertex.fontSize + "px " + graph.vertex.fontFace;
 
         // display constructor name and internal data (in this case, just the point)
-        let str = `${this.data.constructor.name}(${this.data.point.x}, ${this.data.point.y})`,
+        let str = graph.vertex.displayString(this.data),
             metrics = this.context.measureText(str),
             beginX = x - metrics.actualBoundingBoxLeft,
             beginY = (y - metrics.actualBoundingBoxAscent),
@@ -117,18 +111,46 @@ class CircleWrapper extends Circle {
             height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
 
         // draw transparent white rectangle
-        this.context.fillStyle = CircleWrapper.backgroundColor.toString();
+        this.context.fillStyle = graph.vertex.textBoxColor.toString();
         this.context.fillRect(beginX, beginY, width, height);
         
         // draw text
-        this.context.fillStyle = CircleWrapper.textColor.toString();
+        this.context.fillStyle = graph.vertex.textColor.toString();
         this.context.fillText(str, x, y);
     }
 }
 
+class DemoObj extends Pair {
+    toString() {
+        return `${this.constructor.name}(${this.x}, ${this.y})`
+    }
+}
+
+const graph = {
+    backgroundColor: new Color(240),
+    vertex: {
+        displayString: (obj) => obj.toString(),
+        textColor: "#24B4F4",
+        textBoxColor: new Color(256, 256, 256, 0.8),
+        fontFace: "Arial",
+        fontSize: 12,
+        outlineWidth: 2,
+        outlineColor: new Color(0),
+        stdColor: new Color(256),
+        hoveredColor: new Color(230),
+        selectedColor: new Color(160)
+    },
+    edge: {
+        lineWidth: 3,
+        displayString: undefined
+    }
+}
+
 {   
+
     
-    window.addEventListener('resize', resizeCanvas, false);
+    window.onresize = resizeCanvas;
+
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -162,22 +184,29 @@ class CircleWrapper extends Circle {
     //setInterval(createCircles, 100)
 
     function draw() {
+        // fill background
+        ctx.fillStyle = graph.backgroundColor.toString();
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         // create lines
         for (let {x, y} of pairs) x.lineTo(y);
 
         // draw circles in reverse
         for (let i = numCircles-1; i >= 0; i--) {
             let c = circles[i];
-            if (c == target) c.draw(Circle.hoveredColor);
+            if (c == target) c.draw(graph.vertex.hoveredColor);
             else if (c == curr) {
                 //console.log("darwing curr")
-                c.draw(Circle.selectedColor);
+                c.draw(graph.vertex.selectedColor);
             }
             else c.draw();
         }
 
         // draw circle text in reverse
-        for (let i = numCircles-1; i >= 0; i--) circles[i].drawText();
+        for (let i = numCircles-1; i >= 0; i--) {
+            let c = circles[i];
+            if (c == curr || c == target) circles[i].drawText();
+        }
     }
 
     function dragCircleTo(p: Point): void {
@@ -187,9 +216,9 @@ class CircleWrapper extends Circle {
         if (ctrlClicked) {
             drawLine(ctx, curr.point, p);
             target = getCircleAtPoint(p, curr);
-            target && (target.color = Circle.hoveredColor);
+            target && (target.color = graph.vertex.hoveredColor);
         } else {
-            curr.color = Circle.selectedColor;
+            curr.color = graph.vertex.selectedColor;
             curr.moveTo(p);
         }
     }
@@ -222,7 +251,7 @@ class CircleWrapper extends Circle {
             let changed = false,
             prev = curr;
 
-            curr && (curr.color = Circle.stdColor);
+            curr && (curr.color = graph.vertex.stdColor);
             let currIndex = circles.findIndex((circle: Circle) => circle.contains(p));
             curr = circles[currIndex];
             
@@ -232,7 +261,7 @@ class CircleWrapper extends Circle {
                 circles[0] = curr;
                 circles[currIndex] = temp;
 
-                curr.color = Circle.hoveredColor;
+                curr.color = graph.vertex.hoveredColor;
                 
                 if (curr != prev) changed = true;
             } else if (prev) {
@@ -243,7 +272,7 @@ class CircleWrapper extends Circle {
         }
 
         function fadeIn(circle: Circle) {
-            transitionColors(Circle.stdColor, Circle.hoveredColor, 500, (c: Color) => circle.draw(c));
+            transitionColors(graph.vertex.stdColor, graph.vertex.hoveredColor, 500, (c: Color) => circle.draw(c));
         }
     }
 
