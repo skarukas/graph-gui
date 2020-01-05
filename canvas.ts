@@ -247,6 +247,8 @@ class CircleWrapper extends Circle {
         }
     }
 
+    // CANVAS EVENT LISTENERS
+
     canvas.onmousemove = checkHovered;
 
     canvas.onmousedown = (e: MouseEvent) => {
@@ -260,13 +262,18 @@ class CircleWrapper extends Circle {
         //console.log(pairs);
         checkHovered(e);
     }
-
-    canvas.onkeydown = (e: KeyboardEvent) => {
-        if (e.ctrlKey || e.metaKey) ctrlPressed = true;
+    function isControlKey(e: KeyboardEvent) {
+        return e.key == "Meta" || e.key == "Ctrl"
     }
-    canvas.onkeyup = (e: KeyboardEvent) => {
-        if (e.ctrlKey || e.metaKey) ctrlPressed = false;
-    }  
+
+    // WINDOW EVENT LISTENERS
+
+    window.onkeydown = (e: KeyboardEvent) => {
+        if (isControlKey(e)) ctrlPressed = true;
+    }
+    window.onkeyup = (e: KeyboardEvent) => {
+        if (isControlKey(e)) ctrlPressed = false;
+    }
 
     function redraw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
