@@ -141,7 +141,8 @@ class CircleWrapper extends Circle {
         target: Circle,
         numCircles = 10,
         mouseDown = false,
-        ctrlClicked: boolean;
+        ctrlClicked: boolean,
+        ctrlPressed: boolean;
         
     function createCircles() {
         circles = []
@@ -209,11 +210,6 @@ class CircleWrapper extends Circle {
         return false;
     }
 
-    function ctrlPressed() {
-        //return key.isPressed("⌘") || key.isPressed("ctrl");
-        return key.isPressed(91); // FIX ME
-    }
-
     function getCircleAtPoint(p: Point, except: Circle = undefined): Circle {
         return circles.find((circle: Circle) => circle !== except && circle.contains(p));
     }
@@ -254,7 +250,7 @@ class CircleWrapper extends Circle {
     canvas.onmousemove = checkHovered;
 
     canvas.onmousedown = (e: MouseEvent) => {
-        ctrlClicked = ctrlPressed();
+        ctrlClicked = ctrlPressed;
         mouseDown = true;
     }
     canvas.onmouseup = (e: MouseEvent) => {
@@ -264,6 +260,13 @@ class CircleWrapper extends Circle {
         //console.log(pairs);
         checkHovered(e);
     }
+
+    canvas.onkeydown = (e: KeyboardEvent) => {
+        if (e.ctrlKey || e.metaKey) ctrlPressed = true;
+    }
+    canvas.onkeyup = (e: KeyboardEvent) => {
+        if (e.ctrlKey || e.metaKey) ctrlPressed = false;
+    }  
 
     function redraw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
