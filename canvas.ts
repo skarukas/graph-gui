@@ -1,22 +1,6 @@
 let canvas = document.getElementById("graph-gui") as HTMLCanvasElement,
     ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 
-/* //get DPI
-let dpi = window.devicePixelRatio;
-
-function fix_dpi() {
-    //get CSS height
-    //the + prefix casts it to an integer
-    //the slice method gets rid of "px"
-    let style_height = +getComputedStyle(canvas).getPropertyValue("height").slice(0, -2);
-    //get CSS width
-    let style_width = +getComputedStyle(canvas).getPropertyValue("width").slice(0, -2);
-    //scale the canvas
-    canvas.setAttribute('height', (style_height * dpi)+"");
-    canvas.setAttribute('width', (style_width * dpi)+"");
-} */
-
-
 class Color {
     r: number;
     g: number; 
@@ -46,19 +30,17 @@ class Color {
 }
 
 class Circle {
-    color = graph.vertex.stdColor; // should it really store a color?
     hovered = false;
-    point: Point;
+    center: Point;
     context: CanvasRenderingContext2D;
 
     constructor(x = 0, y = 0, public radius = 20) {
-        this.point = new Point(x, y);
+        this.center = new Point(x, y);
     }
     draw(color: Color = graph.vertex.stdColor) {
-        this.color = color;
         let str = color.toString();
         this.context.beginPath();
-        this.context.arc(this.point.x, this.point.y, this.radius, 0, 2 * Math.PI);
+        this.context.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
         this.context.fillStyle = str;
         this.context.fill();
         this.context.strokeStyle = graph.vertex.outlineColor.toString();
@@ -67,19 +49,19 @@ class Circle {
     }
     lineTo(other: Circle) {
         let temp = this.context.strokeStyle,
-            d = this.point.dist(other.point),
+            d = this.center.dist(other.center),
             c = Math.min(d/3, 200);
 
         this.context.lineWidth = graph.edge.lineWidth;
         this.context.strokeStyle = (new Color(c)).toString();
-        drawLine(this.context, this.point, other.point);
+        drawLine(this.context, this.center, other.center);
         this.context.strokeStyle = temp;
     }
     moveTo(newPoint: Point) {
-        this.point = newPoint;
+        this.center = newPoint;
     }
     contains(p: Point) {
-        return p.dist(this.point) < this.radius;
+        return p.dist(this.center) < this.radius;
     }
 }
 
@@ -94,10 +76,10 @@ class Point extends Pair {
 }
 
 class CircleWrapper extends Circle {
-    data: Object = new DemoObj(13, 34);
+    data: Object;
     drawText() {
-        let x = this.point.x,
-            y = this.point.y - (this.radius + 4);
+        let x = this.center.x,
+            y = this.center.y - (this.radius + 4);
 
         this.context.textAlign = "center";
         this.context.font = graph.vertex.fontSize + "px " + graph.vertex.fontFace;
@@ -172,6 +154,9 @@ const graph = {
             let x = Math.random() * window.innerWidth,
                 y = Math.random() * window.innerHeight,
                 circle = new CircleWrapper(Math.floor(x), Math.floor(y));
+
+            // assign origin point as internal data (for demo purposes)
+            circle.data = new DemoObj(circle.center.x, circle.center.y)
             circle.context = ctx;
             circles.push(circle);
         }
@@ -195,10 +180,7 @@ const graph = {
         for (let i = numCircles-1; i >= 0; i--) {
             let c = circles[i];
             if (c == target) c.draw(graph.vertex.hoveredColor);
-            else if (c == curr) {
-                //console.log("darwing curr")
-                c.draw(graph.vertex.selectedColor);
-            }
+            else if (c == curr) c.draw(graph.vertex.selectedColor);
             else c.draw();
         }
 
@@ -214,17 +196,14 @@ const graph = {
         redraw();
 
         if (ctrlClicked) {
-            drawLine(ctx, curr.point, p);
+            drawLine(ctx, curr.center, p);
             target = getCircleAtPoint(p, curr);
-            target && (target.color = graph.vertex.hoveredColor);
         } else {
-            curr.color = graph.vertex.selectedColor;
             curr.moveTo(p);
         }
     }
     function releaseTarget() {
         if (target) {
-            //console.log("connecting",curr.toString(), target.toString());
             let p = new Pair(target, curr);
             if (!pairExists(p)) pairs.push(p);
             target = undefined;
@@ -251,7 +230,6 @@ const graph = {
             let changed = false,
             prev = curr;
 
-            curr && (curr.color = graph.vertex.stdColor);
             let currIndex = circles.findIndex((circle: Circle) => circle.contains(p));
             curr = circles[currIndex];
             
@@ -260,8 +238,6 @@ const graph = {
                 let temp = circles[0];
                 circles[0] = curr;
                 circles[currIndex] = temp;
-
-                curr.color = graph.vertex.hoveredColor;
                 
                 if (curr != prev) changed = true;
             } else if (prev) {
@@ -288,7 +264,6 @@ const graph = {
         ctrlClicked = false;
         mouseDown = false;
         releaseTarget();
-        //console.log(pairs);
         checkHovered(e);
     }
     function isControlKey(e: KeyboardEvent) {
@@ -308,20 +283,20 @@ const graph = {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         draw();
     }
-}
 
-function transitionColors(from: Color, to: Color, ms: number, callback, fps = 29) {
-    let frameCount = (ms / 1000) * fps,
-        trans = true,
-        incVals = from.getDiff(to).map(n => n / frameCount);
-
-    setTimeout(() => trans = false, ms);
-/*     while (trans) {
-        setInterval(() => {
-            from.increment(incVals);
-        }, 1000 / fps);
-    } */
-    callback(from);
+    function transitionColors(from: Color, to: Color, ms: number, callback, fps = 29) {
+        let frameCount = (ms / 1000) * fps,
+            trans = true,
+            incVals = from.getDiff(to).map(n => n / frameCount);
+    
+        setTimeout(() => trans = false, ms);
+    /*     while (trans) {
+            setInterval(() => {
+                from.increment(incVals);
+            }, 1000 / fps);
+        } */
+        callback(from);
+    }
 }
 
 function drawLine(ctx, a: Point, b: Point) {
