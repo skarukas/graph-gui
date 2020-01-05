@@ -79,7 +79,7 @@ class CircleWrapper extends Circle {
     data: Object;
     drawText() {
         let x = this.center.x,
-            y = this.center.y - (this.radius + 4);
+            y = this.center.y - (this.radius + 4 + graph.vertex.textBoxPadding);
 
         this.context.textAlign = "center";
         this.context.font = graph.vertex.fontSize + "px " + graph.vertex.fontFace;
@@ -87,10 +87,10 @@ class CircleWrapper extends Circle {
         // display constructor name and internal data (in this case, just the point)
         let str = graph.vertex.displayString(this.data),
             metrics = this.context.measureText(str),
-            beginX = x - metrics.actualBoundingBoxLeft,
-            beginY = (y - metrics.actualBoundingBoxAscent),
-            width = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight,
-            height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+            beginX = (x - metrics.actualBoundingBoxLeft) - graph.vertex.textBoxPadding,
+            beginY = (y - metrics.actualBoundingBoxAscent) - graph.vertex.textBoxPadding,
+            width = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight + graph.vertex.textBoxPadding * 2,
+            height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + graph.vertex.textBoxPadding * 2;
 
         // draw transparent white rectangle
         this.context.fillStyle = graph.vertex.textBoxColor.toString();
@@ -102,7 +102,7 @@ class CircleWrapper extends Circle {
     }
 }
 
-class DemoObj extends Pair {
+class MyObj extends Pair {
     toString() {
         return `${this.constructor.name}(${this.x}, ${this.y})`
     }
@@ -113,7 +113,8 @@ const graph = {
     vertex: {
         displayString: (obj) => obj.toString(),
         textColor: "#24B4F4",
-        textBoxColor: new Color(256, 256, 256, 0.8),
+        textBoxColor: new Color(256, 256, 256, 0.9),
+        textBoxPadding: 2,
         fontFace: "Arial",
         fontSize: 12,
         outlineWidth: 2,
@@ -156,7 +157,7 @@ const graph = {
                 circle = new CircleWrapper(Math.floor(x), Math.floor(y));
 
             // assign origin point as internal data (for demo purposes)
-            circle.data = new DemoObj(circle.center.x, circle.center.y)
+            circle.data = new MyObj(circle.center.x, circle.center.y)
             circle.context = ctx;
             circles.push(circle);
         }
@@ -189,6 +190,15 @@ const graph = {
             let c = circles[i];
             if (c == curr || c == target) circles[i].drawText();
         }
+
+        // draw title
+        ctx.fillStyle = graph.vertex.textColor.toString();
+        ctx.textAlign = "center";
+        ctx.font = 20 + "px " + graph.vertex.fontFace;
+        ctx.fillText("Interactive Graph", canvas.width/2, 40);
+
+        ctx.font = 10 + "px " + graph.vertex.fontFace;
+        ctx.fillText("© Stephen Karukas (github.com/skarukas)", canvas.width/2, 54);
     }
 
     function dragCircleTo(p: Point): void {
@@ -273,10 +283,16 @@ const graph = {
     // WINDOW EVENT LISTENERS
 
     window.onkeydown = (e: KeyboardEvent) => {
-        if (isControlKey(e)) ctrlPressed = true;
+        if (isControlKey(e)) {
+            canvas.style.cursor = "crosshair"
+            ctrlPressed = true;
+        }
     }
     window.onkeyup = (e: KeyboardEvent) => {
-        if (isControlKey(e)) ctrlPressed = false;
+        if (isControlKey(e)) {
+            canvas.style.cursor = "auto"
+            ctrlPressed = false;
+        }
     }
 
     function redraw() {
