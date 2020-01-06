@@ -7,7 +7,11 @@ class MyPoint extends Point {
 }
 
 graph.onaddedge = (from: MyPoint, to: MyPoint) => {
-    return new Line(from, to);
+    let line = new Line(from, to);
+    // random way of causing a problem
+    if (from.x % 10 == 0) return false;
+    if (from.x % 13 == 0) throw new Error("Divisible by 13!");
+    else return line;
 }
 
 graph.edgePrefs.displayString = (l: Line) => {

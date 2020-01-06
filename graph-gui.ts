@@ -47,18 +47,8 @@ class Circle {
         this.context.lineWidth = graph.vertexPrefs.outlineWidth;
         this.context.stroke();
     }
-/*     lineTo(other: Circle) {
-        let temp = this.context.strokeStyle,
-            d = this.center.dist(other.center),
-            c = Math.min(d/3, 200);
-
-        this.context.lineWidth = graph.edgePrefs.lineWidth;
-        this.context.strokeStyle = (new Color(c)).toString();
-        drawLine(this.context, this.center, other.center);
-        this.context.strokeStyle = temp;
-    } */
-    moveTo(newPoint: Point) {
-        this.center.moveTo(newPoint.x, newPoint.y);
+    moveTo(x: number, y: number) {
+        this.center.moveTo(x, y);
     }
     contains(p: Point) {
         return p.distTo(this.center) < this.radius;
@@ -117,9 +107,9 @@ class Edge extends Line {
             
             // fade color when too compressed
             this.length() == textWidth; 0
-            let lengthDiff = (this.length() - (this.begin.radius + this.end.radius)) - textWidth,
-                radiusSum = this.begin.radius + this.end.radius,
-                alpha = Math.max(0, Math.min(1,  lengthDiff/radiusSum));
+            let threshold = (this.begin.radius + this.end.radius),
+                lengthDiff = (this.length() - threshold) - textWidth,
+                alpha = Math.max(0, Math.min(1,  lengthDiff/ (2 * threshold)));
 
             // draw text at the midpoint (the origin of the translated system)
             this.context.globalAlpha = alpha;
@@ -196,7 +186,6 @@ const graph = {
         fontFace: "Arial",
         fontSize: 12
     },
-
     // EVENT HANDLERS
     
     /**
@@ -233,7 +222,7 @@ const graph = {
     }) as (edgeData: any) => boolean | void,
     onmovevertex: ((...args) => {
         console.warn("No onmovevertex handler specified.");
-    }) as (vertexData: any, x: number, y: number) => void,
+    }) as (vertexData: any, x: number, y: number) => boolean | void,
 }
 
 {  
@@ -308,6 +297,13 @@ const graph = {
         ctx.fillText("© Stephen Karukas (github.com/skarukas)", canvas.width/2, 54);
     }
 
+    function releaseTarget() {
+        if (target) {
+            addEdge(curr, target);
+            target = undefined;
+        }
+    }
+
     function dragVertexTo(p: Point): void {
         if (!curr) return;
         redraw();
@@ -316,35 +312,42 @@ const graph = {
             (new Line(curr.center, p)).draw();
             //drawLine(ctx, curr.center, p);
             target = getVertexAtPoint(p, curr);
-        } else {
-            graph.onmovevertex(curr.data, p.x, p.y);
-            curr.moveTo(p);
-        }
+        } else moveVertex(curr, p.x, p.y);
     }
 
-    function releaseTarget() {
-        if (target) {
-            addEdge(curr, target);
-            target = undefined;
+    function moveVertex(v: Vertex, x: number, y: number) {
+        try {
+            let handlerResult = graph.onmovevertex(curr.data, x, y);
+            if (handlerResult === false) throw new Error();
+            else curr.moveTo(x, y);
+        } catch (e) {
+            console.warn("Unable to move vertex.", e.message);
         }
     }
 
     function addVertex(x: number, y: number) {
-        let v = new Vertex(x, y);
-        v.data = graph.onaddvertex(x, y);
-        vertices.push(v);
+        try {
+            let v = new Vertex(x, y);
+            v.data = graph.onaddvertex(x, y);
+            vertices.push(v);
+        } catch (e) {
+            console.warn("Unable to add vertex.", e.message);
+        }
     }
     function addEdge(from: Vertex, to: Vertex) {
+        try {
+            // call handler and retrieve result
+            let addResult = graph.onaddedge(from.data, to.data);
+            let e: Edge;
 
-        // call handler and retrieve result
-        let addResult = graph.onaddedge(from.data, to.data);
-        let e: Edge;
-        if (!edgeExists([from, to])) {
-            if (addResult === false) return;
-
-            if (addResult === true || addResult === undefined) e = new Edge(from, to);
-            else e = new Edge(from, to, addResult as Object);
-            edges.push(e);
+            if (!edgeExists([from, to])) {
+                if (addResult === false) throw new Error();
+                if (addResult === true || addResult === undefined) e = new Edge(from, to);
+                else e = new Edge(from, to, addResult as Object);
+                edges.push(e);
+            }
+        } catch (e) {
+            console.warn("Unable to add edge.", e.message);
         }
     }
 
@@ -357,7 +360,13 @@ const graph = {
     }
 
     function getVertexAtPoint(p: Point, except: Vertex = undefined): Vertex {
-        return vertices.find((v: Vertex) => v !== except && v.contains(p));
+        return vertices.find((v: Vertex) => {
+            let closeEnough = v !== except && v.contains(p);
+            if (closeEnough) {
+
+            }
+            return closeEnough;
+        });
     }
     
     const checkHovered = (e: MouseEvent) => {
