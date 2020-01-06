@@ -5,4 +5,6 @@ Currently only displays data wrapped in randomly-generated vertices; the edges s
 
 Drag vertices to change their position, and command-drag to connect two vertices.
 
+![Screenhsot](./graph-story.png)
+
 Only tested on Mac (Safari/Chrome) at the moment.
