@@ -8,7 +8,7 @@ export default function addHandlers(canvas: HTMLCanvasElement, model: Model<any,
         shiftPressed: false,
         shiftDragged: false
     }
-    
+     
     // CANVAS EVENT LISTENERS
     canvas.onmousemove = (e: MouseEvent) => {
         if (modifiers.mouseDown) {
