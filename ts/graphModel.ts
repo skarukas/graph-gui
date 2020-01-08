@@ -110,8 +110,7 @@ class Model<V, E> {
             // infer vertex class type from the result
             this.graph.vertexPrefs.class = this.graph.vertexPrefs.class || getConstructor(handlerResult);
             let v = new Vertex<V>(x, y);
-            if (handlerResult !== true) v.data = handlerResult || v.data;
-
+            if (handlerResult !== true) v.data = (handlerResult == undefined)? v.data : handlerResult as V;
             this.addVertex(v);
             return v;
         } catch (e) {
@@ -150,9 +149,8 @@ class Model<V, E> {
             let userInput: string = prompt(this.graph.vertexPrefs.editPrompt);
             if (!userInput) return;
             let handlerResult = this.graph.event.oneditvertex(v.data, userInput) || v.data;
-            console.log(handlerResult);
             // typecheck result
-            if (! (handlerResult instanceof this.graph.vertexPrefs.class)) {
+            if (! (handlerResult instanceof this.graph.vertexPrefs.class || typeof handlerResult === this.graph.vertexPrefs.class.name.toLowerCase())) {
                 throw new Error("The input did not produce a result of class " + this.graph.vertexPrefs.class.name);
             }
 
@@ -210,7 +208,6 @@ class Model<V, E> {
     }
     releaseDrag() {
         if (this.target) {
-            console.log("releasing target");
             this.tryAddEdge(this.curr, this.target);
             this.target.isHovered = false;
             this.target = undefined;

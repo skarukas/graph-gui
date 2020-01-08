@@ -100,9 +100,12 @@ class Graph<V, E> {
     }
     width: number;
     height: number;
+    suppressWarnings() {
+        this.event.suppressWarnings = true;
+    }
     backgroundColor: Color | string = new Color(240);
     vertexPrefs = {
-        class: null as Constructor,
+        class: undefined as Constructor,
         displayString(obj: Object) {
             return obj.toString();
         },
@@ -129,6 +132,7 @@ class Graph<V, E> {
         fontSize: 12
     };
     event = {
+        suppressWarnings: false,
         // EVENT HANDLERS
     
         /**
@@ -137,7 +141,7 @@ class Graph<V, E> {
          * - Returning a boolean type (`false` or `true`) determines whether the graph should display the edge.
          */
         onaddedge(from: V, to: V): E | boolean | void {
-            console.warn("No onaddedge handler specified.");
+            !this.suppressWarnings && console.warn("No onaddedge handler specified.");
         },
         /**
          * Called by the framework whenever the user creates a vertex.
@@ -145,7 +149,7 @@ class Graph<V, E> {
          * - Returning a boolean type (`false` or `true`) determines whether the graph should display the vertex.
          */
         onaddvertex(x: number, y: number, ...args: any): V | boolean | void {
-            console.warn("No onaddvertex handler specified.");
+            !this.suppressWarnings && console.warn("No onaddvertex handler specified.");
         },
         /**
          * Called by the framework whenever the user removes a vertex.
@@ -153,7 +157,7 @@ class Graph<V, E> {
          * - Returning a boolean type (`false` or `true`) specifies whether the vertex was successfully removed.
          */
         onremovevertex(vertexData: V) : boolean | void {
-            console.warn("No onremovevertex handler specified.");
+            !this.suppressWarnings && console.warn("No onremovevertex handler specified.");
         },   
         /**
          * Called by the framework whenever the user removes a edge.
@@ -161,16 +165,16 @@ class Graph<V, E> {
          * - Returning a boolean type (`false` or `true`) specifies whether the edge was successfully removed.
          */
         onremoveedge(edgeData: E) : boolean | void {
-            console.warn("No onremoveedge handler specified.");
+            !this.suppressWarnings && console.warn("No onremoveedge handler specified.");
         },
         onmovevertex(vertexData: V, x: number, y: number) : boolean | void {
-            console.warn("No onmovevertex handler specified.");
+            !this.suppressWarnings && console.warn("No onmovevertex handler specified.");
         },
         oneditvertex(vertexData: V, userInput: string): V | void {
-            console.warn("No oneditvertex handler specified.");
+            !this.suppressWarnings && console.warn("No oneditvertex handler specified.");
         },
         oneditedge(edgeData: E, userInput: string): E | void {
-            console.warn("No oneditedge handler specified.");
+            !this.suppressWarnings && console.warn("No oneditedge handler specified.");
         }
     }
 }

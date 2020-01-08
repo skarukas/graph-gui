@@ -112,7 +112,7 @@ class Edge<T> extends Line {
 
         let {width: textWidth } = context.measureText(str);
 
-        if (this.length() > textWidth) {
+        if (this.length() > textWidth && str) {
             let adj = this.begin.center.x - this.end.center.x,
             opp = this.begin.center.y - this.end.center.y,
             angle = Math.atan(opp/adj);
@@ -163,14 +163,15 @@ class Vertex<T> extends Circle {
                 beginY = (y - metrics.actualBoundingBoxAscent) - drawingPrefs.textBoxPadding,
                 width = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight + drawingPrefs.textBoxPadding * 2,
                 height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + drawingPrefs.textBoxPadding * 2;
-
-            // draw colored rectangle
-            context.fillStyle = drawingPrefs.textBoxColor.toString();
-            context.fillRect(beginX, beginY, width, height);
-            
-            // draw text
-            context.fillStyle = drawingPrefs.textColor.toString();
-            context.fillText(str, x, y);
+            if (str) {
+                // draw colored rectangle
+                context.fillStyle = drawingPrefs.textBoxColor.toString();
+                context.fillRect(beginX, beginY, width, height);
+                
+                // draw text
+                context.fillStyle = drawingPrefs.textColor.toString();
+                context.fillText(str, x, y);
+            }
         }
     }
 }

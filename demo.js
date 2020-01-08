@@ -1,6 +1,5 @@
 // using the gui's internal classes just for the demo
 const g = graph();
-console.log("running!");
 
 class MyPoint {
     constructor(x, y) {
