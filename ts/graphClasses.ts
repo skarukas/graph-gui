@@ -86,7 +86,6 @@ class Line implements Drawable {
         return new Point((this.a.x + this.b.x) / 2, (this.a.y + this.b.y) / 2);
     }
     length() {
-        //console.log(this.a, this.b)
         return this.a.distTo(this.b);
     }
     toString() {
@@ -107,9 +106,8 @@ class Edge<T> extends Line {
 
         context.textAlign = "center";
         context.font = drawingPrefs.fontSize + "px " + drawingPrefs.fontFace;
-
+        //if (this.isSelected || this.isHovered || drawingPrefs.alwaysDisplayText) {
         let str = (this.data == undefined)? "" : drawingPrefs.displayString(this.data);
-
         let {width: textWidth } = context.measureText(str);
 
         if (this.length() > textWidth && str) {
@@ -149,24 +147,33 @@ class Vertex<T> extends Circle {
     }
     drawText(context: CanvasRenderingContext2D, drawingPrefs: any) {
         // only draw text if hovered
-        if (this.isSelected || this.isHovered) {
-            let x = this.center.x,
-                y = this.center.y - (this.radius + 4 + drawingPrefs.textBoxPadding);
-
-            context.textAlign = "center";
-            context.font = drawingPrefs.fontSize + "px " + drawingPrefs.fontFace;
-
+        if (this.isSelected || this.isHovered || drawingPrefs.alwaysDisplayText) {
             // display string of internal data
             let str = drawingPrefs.displayString(this.data),
                 metrics = context.measureText(str),
-                beginX = (x - metrics.actualBoundingBoxLeft) - drawingPrefs.textBoxPadding,
-                beginY = (y - metrics.actualBoundingBoxAscent) - drawingPrefs.textBoxPadding,
                 width = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight + drawingPrefs.textBoxPadding * 2,
                 height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + drawingPrefs.textBoxPadding * 2;
+
             if (str) {
-                // draw colored rectangle
-                context.fillStyle = drawingPrefs.textBoxColor.toString();
-                context.fillRect(beginX, beginY, width, height);
+                let x = this.center.x;
+                let y;
+
+                // if the text doesn't fit in the circle, put it above
+                if (Math.sqrt(width * width + height * height) < this.radius*2) {
+                    y = this.center.y + (metrics.actualBoundingBoxAscent ) / 2;
+                } else {
+                    y = this.center.y - (this.radius + 4 + drawingPrefs.textBoxPadding);
+
+                    let beginX = (x - metrics.actualBoundingBoxLeft) - drawingPrefs.textBoxPadding,
+                        beginY = (y - metrics.actualBoundingBoxAscent) - drawingPrefs.textBoxPadding;
+
+                    // draw colored rectangle
+                    context.fillStyle = drawingPrefs.textBoxColor.toString();
+                    context.fillRect(beginX, beginY, width, height);
+                }
+                
+                context.textAlign = "center";
+                context.font = drawingPrefs.fontSize + "px " + drawingPrefs.fontFace;
                 
                 // draw text
                 context.fillStyle = drawingPrefs.textColor.toString();

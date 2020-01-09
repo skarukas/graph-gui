@@ -9,4 +9,7 @@ g.event.onaddvertex = (x, y) => "";
 
 g.event.oneditvertex = (curr, data) => data;
 
+g.vertexPrefs.alwaysDisplayText = true;
+g.vertexPrefs.textColor = 'black'
+
 g.initialize();

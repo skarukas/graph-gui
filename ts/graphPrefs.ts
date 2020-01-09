@@ -112,6 +112,7 @@ class Graph<V, E> {
         textColor: "#24B4F4" as Color | string,
         textBoxColor: new Color(256, 256, 256, 0.9) as Color | string,
         textBoxPadding: 2,
+        alwaysDisplayText: false,
         fontFace: "Arial",
         fontSize: 12,
         outlineWidth: 2,
@@ -129,7 +130,8 @@ class Graph<V, E> {
         stdColor: new Color(0) as Color | string,
         hoveredColor: new Color(230) as Color | string,
         fontFace: "Arial",
-        fontSize: 12
+        fontSize: 12,
+        alwaysDisplayText: true
     };
     event = {
         suppressWarnings: false,
