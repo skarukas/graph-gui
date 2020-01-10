@@ -120,37 +120,38 @@ class Edge<T> extends Line {
         return this.data.toString();
     }
     drawText(context: CanvasRenderingContext2D, drawingPrefs: any) {
-        let { x, y } = this.midpoint();
+        if (drawingPrefs.alwaysDisplayText || this.isHovered) {
+            let { x, y } = this.midpoint();
 
-        context.textAlign = "center";
-        context.font = drawingPrefs.fontSize + "px " + drawingPrefs.fontFace;
-        //if (this.isSelected || this.isHovered || drawingPrefs.alwaysDisplayText) {
-        let str = (this.data == undefined)? "" : drawingPrefs.displayString(this.data);
-        let {width: textWidth } = context.measureText(str);
+            context.textAlign = "center";
+            context.font = drawingPrefs.fontSize + "px " + drawingPrefs.fontFace;
+            let str = (this.data == undefined)? "" : drawingPrefs.displayString(this.data);
+            let {width: textWidth } = context.measureText(str);
 
-        if (this.length() > textWidth && str) {
-            let adj = this.begin.center.x - this.end.center.x,
-            opp = this.begin.center.y - this.end.center.y,
-            angle = Math.atan(opp/adj);
+            if (this.length() > textWidth && str) {
+                let adj = this.begin.center.x - this.end.center.x,
+                opp = this.begin.center.y - this.end.center.y,
+                angle = Math.atan(opp/adj);
 
-            // rotate around the midpoint to match the angle of the line
-            context.save();
-            context.translate(x, y);
-            context.rotate(angle);
-            
-            // fade color when too compressed
-            this.length() == textWidth; 0
-            let threshold = (this.begin.radius + this.end.radius),
-                lengthDiff = (this.length() - threshold) - textWidth,
-                alpha = Math.max(0, Math.min(1,  lengthDiff/ (2 * threshold)));
+                // rotate around the midpoint to match the angle of the line
+                context.save();
+                context.translate(x, y);
+                context.rotate(angle);
+                
+                // fade color when too compressed
+                this.length() == textWidth; 0
+                let threshold = (this.begin.radius + this.end.radius),
+                    lengthDiff = (this.length() - threshold) - textWidth,
+                    alpha = Math.max(0, Math.min(1,  lengthDiff/ (2 * threshold)));
 
-            // draw text at the midpoint (the origin of the translated system)
-            context.globalAlpha = alpha;
-            if (this.isHovered) context.fillStyle = drawingPrefs.hoveredColor.toString();
-            else context.fillStyle = drawingPrefs.stdColor.toString();
-            context.fillText(str, 0, -drawingPrefs.lineWidth);
+                // draw text at the midpoint (the origin of the translated system)
+                context.globalAlpha = alpha;
+                if (this.isHovered) context.fillStyle = drawingPrefs.hoveredColor.toString();
+                else context.fillStyle = drawingPrefs.stdColor.toString();
+                context.fillText(str, 0, -drawingPrefs.lineWidth);
 
-            context.restore();
+                context.restore();
+            }
         }
     }
 }
@@ -166,7 +167,7 @@ class Vertex<T> extends Circle {
     }
     drawText(context: CanvasRenderingContext2D, drawingPrefs: any) {
         // only draw text if hovered
-        if (this.isSelected || this.isHovered || drawingPrefs.alwaysDisplayText) {
+        if (drawingPrefs.alwaysDisplayText || this.isSelected || this.isHovered) {
             // display string of internal data
             let str = drawingPrefs.displayString(this.data),
                 metrics = context.measureText(str),
