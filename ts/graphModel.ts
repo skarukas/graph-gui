@@ -7,6 +7,7 @@ class Model<V, E> {
     private vertices: Vertex<V>[] = []; 
     private target: Vertex<V>;
     private curr: Vertex<V>;
+    private currEdge: Edge<E>;
     
     constructor(private view: View<V, E>, private graph: Graph<V, E>) { }
 
@@ -76,6 +77,12 @@ class Model<V, E> {
             vertex = this.vertices[index];
         return { index, vertex };
     }
+    getEdgeAtPoint(x: number, y: number, except?: Edge<E>) {
+        let index = this.edges.findIndex((e: Edge<E>) => e !== except && e.contains(new Point(x, y))),
+            edge = this.edges[index];
+            //console.log(edge)
+        return { index, edge };
+    }
     getVertexWithData(data: V) {
         let index = this.vertices.findIndex((v: Vertex<V>) => v.data == data),
             vertex = this.vertices[index];
@@ -108,7 +115,8 @@ class Model<V, E> {
             if (handlerResult === false) throw new Error();
 
             // infer vertex class type from the result
-            this.graph.vertexPrefs.class = this.graph.vertexPrefs.class || getConstructor(handlerResult);
+            this.graph.vertexPrefs.class = this.graph.vertexPrefs.class || this.getConstructor(handlerResult);
+
             let v = new Vertex<V>(x, y);
             if (handlerResult !== true) v.data = (handlerResult == undefined)? v.data : handlerResult as V;
             this.addVertex(v);
@@ -117,11 +125,10 @@ class Model<V, E> {
             console.warn("Unable to add vertex.", e.message);
             return null;
         }
-
-        function getConstructor(data: any) {
-            try   { return data.constructor } 
-            catch { return Object }
-        }
+    }
+    private getConstructor(data: any) {
+        try   { return data.constructor } 
+        catch { return Object }
     }
     tryAddEdge(from: Vertex<V>, to: Vertex<V>): boolean {
         try {
@@ -132,10 +139,12 @@ class Model<V, E> {
             let handlerResult = this.graph.event.onaddedge(from.data, to.data);
             if (handlerResult === false) throw new Error();
 
+            // infer vertex class type from the result
+            this.graph.edgePrefs.class = this.graph.edgePrefs.class || this.getConstructor(handlerResult);
+
             // add edge, either with data or without
             let e = new Edge<E>(from, to);
-            if (handlerResult !== true) e.data = handlerResult || e.data;
-
+            if (handlerResult !== true) e.data = (handlerResult == undefined)? e.data : handlerResult as E;
             this.addEdge(e);
             return true;
         } catch (e) {
@@ -150,14 +159,34 @@ class Model<V, E> {
             if (!userInput) return;
             let handlerResult = this.graph.event.oneditvertex(v.data, userInput) || v.data;
             // typecheck result
-            if (! (handlerResult instanceof this.graph.vertexPrefs.class || typeof handlerResult === this.graph.vertexPrefs.class.name.toLowerCase())) {
-                throw new Error("The input did not produce a result of class " + this.graph.vertexPrefs.class.name);
+            let C = this.graph.vertexPrefs.class;
+            if (! (handlerResult instanceof C || typeof handlerResult === C.name.toLowerCase())) {
+                throw new Error("The input did not produce a result of class " + C.name);
             }
 
             this.editVertex(v, handlerResult);
             return true;
         } catch (e) {
             console.warn("Unable to edit vertex.", e.message);
+            return false;
+        }
+    }
+    tryEditEdge(e: Edge<E>) {
+        try {
+            // prompt the user and call handler on the input
+            let userInput: string = prompt(this.graph.edgePrefs.editPrompt);
+            if (!userInput) return;
+            let handlerResult = this.graph.event.oneditedge(e.data, userInput) || e.data;
+            // typecheck result
+            let C = this.graph.edgePrefs.class;
+            if (! (handlerResult instanceof C || typeof handlerResult === C.name.toLowerCase())) {
+                throw new Error("The input did not produce a result of class " + C.name);
+            }
+
+            this.editEdge(e, handlerResult);
+            return true;
+        } catch (e) {
+            console.warn("Unable to edit edge.", e.message);
             return false;
         }
     }
@@ -184,9 +213,26 @@ class Model<V, E> {
             return false;
         }   
     }
+    tryRemoveEdge(index: number): boolean {
+        try {
+            let e = this.edges[index],
+                handlerResult = this.graph.event.onremoveedge(e.data);
+            if (handlerResult === false) throw new Error();
+            else this.removeEdge(index);
+            return true;
+        } catch (e) {
+            console.warn("Unable to remove edge.", e.message);
+            return false;
+        }   
+    }
     rightClick(x: number, y: number) {
         let { vertex } = this.getVertexAtPoint(x, y);
-        if (vertex) this.tryEditVertex(vertex);
+        if (vertex) {
+            this.tryEditVertex(vertex);
+            return;
+        } 
+        let { edge } = this.getEdgeAtPoint(x, y);
+        if (edge) this.tryEditEdge(edge);
         else {
             let v = this.tryAddVertex(x, y);
             //this.tryEditVertex(v); // immediately edit?
@@ -194,7 +240,12 @@ class Model<V, E> {
     }
     shiftKeyAt(x: number, y: number) {
         let { index } = this.getVertexAtPoint(x, y);
-        if (~index) this.tryRemoveVertex(index);
+        if (~index) {
+            this.tryRemoveVertex(index);
+        } else {
+            index = this.getEdgeAtPoint(x, y).index;
+            if (~index) this.tryRemoveEdge(index);
+        }
     }
     dragTo(x: number, y: number): void {
         if (this.curr) this.tryMoveVertex(this.curr, x, y);
@@ -215,22 +266,49 @@ class Model<V, E> {
     }
     checkHovered(x: number, y: number) {
         this.curr = this.updateHoveredVertex(this.curr, x, y);
+        this.currEdge = this.updateHoveredEdge(this.currEdge, x, y);
+    }
+    private updateHoveredEdge(curr: Edge<E>, x: number, y: number) {
+        // no edge hovering when a vertex is hovered
+        if (this.curr) {
+            curr && (curr.isHovered = false);
+            this.redraw();
+            return undefined;
+        }
+
+        let prev: Edge<E> = curr;
+
+        let { index } = this.getEdgeAtPoint(x, y);
+        curr = this.edges[index];
+
+        if (curr !== prev) {
+            if (curr != undefined) {
+                curr.isHovered = true;
+                // move to front
+                this.edges.splice(index, 1);
+                this.edges.unshift(curr);
+            }
+            if (prev != undefined) {
+                prev.isHovered = false;
+            }
+            this.redraw();
+        }
+        return curr;
     }
     private updateHoveredVertex(curr: Vertex<V>, x: number, y: number) {
-        let changed = false,
-            prev: Vertex<V> = curr;
+        let prev: Vertex<V> = curr;
 
         let { index } = this.getVertexAtPoint(x, y);
         curr = this.vertices[index];
 
         if (curr !== prev) {
-            if (curr) {
+            if (curr != undefined) {
                 curr.isHovered = true;
                 // move to front
                 this.vertices.splice(index, 1);
                 this.vertices.unshift(curr);
             }
-            if (prev) prev.isHovered = false;
+            if (prev != undefined) prev.isHovered = false;
             this.redraw();
         }
         return curr;

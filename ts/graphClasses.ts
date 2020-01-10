@@ -70,13 +70,19 @@ class Point {
     lineTo(other: Point) {
         return new Line(this, other);
     }
+    innerAngleTo(other: Point): number {
+        let angle = Math.atan((this.y - other.y) / (this.x - other.x));
+        return angle;
+    }
 }
 
 class Line implements Drawable {
+    isHovered: boolean;
     constructor(public a: Point, public b: Point) { }
     draw(context: CanvasRenderingContext2D, drawingPrefs: any) {
         context.lineWidth = drawingPrefs.lineWidth;
-        context.strokeStyle = drawingPrefs.stdColor.toString();
+        if (this.isHovered) context.strokeStyle = drawingPrefs.hoveredColor.toString();
+        else context.strokeStyle = drawingPrefs.stdColor.toString();
         context.beginPath();
         context.moveTo(this.a.x, this.a.y);
         context.lineTo(this.b.x, this.b.y);
@@ -91,9 +97,21 @@ class Line implements Drawable {
     toString() {
         return this.a.toString() + " to " + this.b.toString();
     }
+    contains(p: Point) {
+        let thresh = 5;
+        if (Math.abs(this.a.x - this.b.x) > 2*thresh && this.a.x < p.x == this.b.x < p.x) return false;
+        if (Math.abs(this.a.y - this.b.y) > 2*thresh && this.a.y < p.y == this.b.y < p.y) return false;
+        return this.distTo(p) < thresh;
+    }
+    distTo(p: Point) {
+        let angle1 = this.a.innerAngleTo(p),
+            angle2 = this.a.innerAngleTo(this.b),
+            dist = Math.sin(angle2 - angle1) * this.a.distTo(p);
+        return Math.abs(dist);
+    }
 }
 
-class Edge<T> extends Line { 
+class Edge<T> extends Line {
     constructor(public begin: Vertex<any>, public end: Vertex<any>, public data?: T) {
         super(begin.center, end.center);
     }
@@ -128,7 +146,8 @@ class Edge<T> extends Line {
 
             // draw text at the midpoint (the origin of the translated system)
             context.globalAlpha = alpha;
-            context.fillStyle = drawingPrefs.stdColor.toString();
+            if (this.isHovered) context.fillStyle = drawingPrefs.hoveredColor.toString();
+            else context.fillStyle = drawingPrefs.stdColor.toString();
             context.fillText(str, 0, -drawingPrefs.lineWidth);
 
             context.restore();

@@ -123,15 +123,17 @@ class Graph<V, E> {
         editPrompt: "Enter a new value for this vertex."
     };
     edgePrefs = {
+        class: undefined as Constructor,
         lineWidth: 2,
         displayString(obj: Object) {
             return obj.toString();
         },
         stdColor: new Color(0) as Color | string,
-        hoveredColor: new Color(230) as Color | string,
+        hoveredColor: "#24B4F4" as Color | string,
         fontFace: "Arial",
         fontSize: 12,
-        alwaysDisplayText: true
+        alwaysDisplayText: true,
+        editPrompt: "Enter a new value for this edge."
     };
     event = {
         suppressWarnings: false,
