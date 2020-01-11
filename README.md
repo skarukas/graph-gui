@@ -13,6 +13,6 @@ Displays data stored in edges and vertices of an undirected graph. `demo.js` dis
 
 ![Screenhsot](./graph-story.png)
 
-The framework emits events when the user attempts to add, remove, or edit vertices and edges, and when they move vertices. These events are handled and approved by programmer-defined methods located in `Graph.event`.
+The framework emits events when the user attempts to add, remove, or edit vertices and edges, and when they move vertices. These events are handled and approved by programmer-defined methods located in `Graph.event`. More documentation about creating custom handlers coming soon.
 
-Only tested on Mac (Safari/Chrome) at the moment. More documentation about creating custom handlers coming soon.
+Only tested on Mac (Safari/Chrome) at the moment.
