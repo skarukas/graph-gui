@@ -1,6 +1,6 @@
-// using the gui's internal classes just for the demo
 const g = graph();
 
+// defining some "back-end" classes for representing points and their distances
 class MyPoint {
     constructor(x, y) {
         this.x = x;
@@ -13,9 +13,6 @@ class MyPoint {
         this.x = x;
         this.y = y;
     }
-    toString() {
-        return `${this.constructor.name}(${this.x}, ${this.y})`
-    }
     lineTo(other) {
         return new MyLine(this, other);
     }
@@ -27,25 +24,33 @@ class MyLine {
         this.b = b;
     }
     length() {
-        //console.log(this.a, this.b)
         return this.a.distTo(this.b);
     }
-    toString() {
-        return this.a.toString() + " to " + this.b.toString();
-    }
 }
+
+// ====== USING THE GRAPH =======
+
+g.suppressWarnings();
 
 g.vertexPrefs.class = MyPoint;
 
-g.edgePrefs.displayString = (l) => {
-    return "distance: " + Math.floor(l.length()) + "px";
+g.edgePrefs.displayString = (line) => {
+    return "distance: " + Math.floor(line.length()) + "px";
 }
 
-// event handlers
+g.vertexPrefs.displayString = (point) => {
+    return `(${point.x}, ${point.y})`;
+}
+
+g.vertexPrefs.editPrompt = "Enter a new location for the Point.\nFormat: x, y";
+
+
+// =======EVENT HANDLERS==========
 g.event.onaddedge = (from, to) => {
     return new MyLine(from, to);
 }
 
+// change coords within MyPoint
 g.event.onmovevertex = (data, x, y) => {
     data.moveTo && data.moveTo(x, y);
 }
@@ -54,20 +59,14 @@ g.event.onaddvertex = (x, y) => {
     return new MyPoint(x, y);
 }
 
-g.event.oneditvertex = (curr, data) => {
+// move the vertex if the user inputs an (x, y) pair
+g.event.oneditvertex = (currPt, data) => {
     let coords = data.split(",").map(s => parseInt(s));
-    curr.moveTo(coords[0] || curr.x, coords[1] || curr.y);
-    g.moveVertex(curr, curr.x, curr.y);
-    return curr;
+    currPt.moveTo(coords[0] || currPt.x, coords[1] || currPt.y);
+    g.moveVertex(currPt, currPt.x, currPt.y);
+    return currPt;
 }
+
+
+// generate random vertices
 g.initialize();
-
-g.addVertex(new MyPoint(100, 100), 100, 100);
-
-let p = new MyPoint(300, 300);
-g.addVertex(p, 300, 300);
-
-setTimeout(() => {
-    console.log("reoving",p)
-    g.removeVertex(p);
-}, 10000);
