@@ -1,7 +1,7 @@
 # graph-gui
 An (in progress) [interactive graph interface](https://skarukas.github.io/graph-gui/index.html) using the HTML canvas element. 
 
-Displays data stored in edges and vertices of an undirected graph. `demo.js` displays points and their Euclidian distances, and `stringDemo.js` just allows direct editing of edge and vertex labels.
+Displays data stored in edges and vertices of an undirected graph. [`demo.js`](https://skarukas.github.io/graph-gui/demo.html) displays points and their Euclidian distances, and [`stringDemo.js`](https://skarukas.github.io/graph-gui/index.html) just allows direct editing of edge and vertex labels (no back end data).
 
 #### GUI commands:
 - Dragging vertices changes their position.
