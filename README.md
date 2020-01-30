@@ -10,7 +10,7 @@ Displays data stored in edges and vertices of an undirected graph. `demo.js` dis
 - Right-clicking in an empty space creates a new vertex.
 - Right-clicking over a vertex or edge edits its data.
 
-The framework emits events when the user attempts to add, remove, or edit vertices and edges, and when they move vertices. These events are handled and approved by programmer-defined methods located in `Graph.event`. More documentation about creating custom handlers coming soon.
+The framework emits events when the user attempts to add, remove, or edit vertices and edges, and when they move vertices. These events can be handled and approved by programmer-defined methods located in `Graph.event`. More documentation about creating custom handlers coming soon.
 
 
 ![Screenshot](./graph-story.png)
