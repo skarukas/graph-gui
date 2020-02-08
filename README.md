@@ -2,8 +2,8 @@
 An (in progress) interactive graph interface using the HTML canvas element. 
 
 It displays data stored in edges and vertices of an undirected graph, serving as a simple front end for a variety of graph-based representations. Two demos included are the following:
-- [`demo.js`](https://skarukas.github.io/graph-gui/demo.html) displays editable points and their Euclidian distances
-- [`stringDemo.js`](https://skarukas.github.io/graph-gui/index.html) is for direct editing of edge and vertex labels (no back end data).
+- The [first](https://skarukas.github.io/graph-gui/index.html) simply allows direct editing of edge and vertex labels (no back end data). Code: [`stringDemo.js`](./stringDemo.js).
+- The [second](https://skarukas.github.io/graph-gui/demo.html) displays 2-D points and their Euclidian distances. Code: [`demo.js`](./demo.js).
 
 #### GUI commands:
 - Dragging vertices changes their position.
