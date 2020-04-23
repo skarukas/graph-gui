@@ -4,6 +4,7 @@
   "description": "An (in progress) [interactive graph interface](https://skarukas.github.io/graph-gui/index.html) using the HTML canvas element.",
   "private": true,
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,12 +18,10 @@
   },
   "homepage": "https://github.com/skarukas/graph-gui#readme",
   "devDependencies": {
-    "ts-loader": "^6.2.1",
-    "typescript": "^3.7.4",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "typescript": "^3.7.4"
   },
   "dependencies": {
     "tsc": "^1.20150623.0"
-  }
+  },
+  "main": "demo.js"
 }

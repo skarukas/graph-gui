@@ -1,4 +1,4 @@
-import graph from "./dist/module/graph.js";
+import graph from "./graph.js";
 const g = graph();
 
 g.suppressWarnings();
