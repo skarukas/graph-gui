@@ -1,3 +1,4 @@
+// load graph module
 import graph from "./graph.js";
 const g = graph();
 

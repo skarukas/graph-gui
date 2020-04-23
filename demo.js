@@ -1,4 +1,5 @@
-import graph from "./graph.js"; ///sdsdas
+// load graph module
+import graph from "./graph.js";
 const g = graph();
 
 // defining some "back-end" classes for representing points and their distances
