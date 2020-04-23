@@ -21,5 +21,8 @@
     "typescript": "^3.7.4",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "tsc": "^1.20150623.0"
   }
 }

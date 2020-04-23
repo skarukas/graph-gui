@@ -1,3 +1,4 @@
+import graph from "./dist/module/graph.js";
 const g = graph();
 
 // defining some "back-end" classes for representing points and their distances
@@ -42,8 +43,7 @@ g.vertexPrefs.displayString = (point) => {
     return `(${point.x}, ${point.y})`;
 }
 
-g.vertexPrefs.editPrompt = "Enter a new location for the Point.\nFormat: x, y";
-
+g.vertexPrefs.editPrompt = "Enter a new location for the Point.\nFormat: x y";
 
 // =======EVENT HANDLERS==========
 g.event.onaddedge = (from, to) => {
